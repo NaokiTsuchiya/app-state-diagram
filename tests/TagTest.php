@@ -25,6 +25,9 @@ class TagTest extends TestCase
         ));
         $this->assertArrayHasKey('s1->s2:t1', $profile->links);
         $this->assertArrayNotHasKey('s2->s3:t2', $profile->links);
+        $this->assertArrayHasKey('id', $profile->descriptors);
+        $this->assertCount(2, $profile->descriptors['s1']->descriptor);
+        $this->assertCount(1, $profile->descriptors['s2']->descriptor);
     }
 
     public function testFilteredByOrTag(): void
@@ -37,5 +40,8 @@ class TagTest extends TestCase
         $this->assertArrayHasKey('s1->s2:t1', $profile->links);
         $this->assertArrayHasKey('s2->s3:t2', $profile->links);
         $this->assertArrayHasKey('s3->s4:t3', $profile->links);
+        $this->assertArrayHasKey('id', $profile->descriptors);
+        $this->assertCount(2, $profile->descriptors['s1']->descriptor);
+        $this->assertCount(2, $profile->descriptors['s2']->descriptor);
     }
 }
