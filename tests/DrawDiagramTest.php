@@ -54,4 +54,17 @@ class DrawDiagramTest extends TestCase
         $dot = ($this->drawDiagram)(new AlpsProfile($alpsFile));
         $this->assertStringNotContainsString('name [', $dot);
     }
+
+    public function testTaggedProfile(): void
+    {
+        $alpsFile = __DIR__ . '/Fake/alps_tag.json';
+        $taggedProfile = new TaggedAlpsProfile(
+            new AlpsProfile($alpsFile),
+            [],
+            ['a', 'b']
+        );
+        $dot = ($this->drawDiagram)($taggedProfile);
+        $this->assertStringContainsString('s1 -> s2 [label = "t1 (safe)"', $dot);
+        $this->assertStringNotContainsString('s2 -> s3 [label = "t2 (safe)"', $dot);
+    }
 }
