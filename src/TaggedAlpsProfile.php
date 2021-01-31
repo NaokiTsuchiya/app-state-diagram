@@ -24,16 +24,23 @@ final class TaggedAlpsProfile extends AbstractProfile
      */
     public function __construct(AbstractProfile $alpsFile, array $orTags, array $andTags)
     {
+        $this->scanLinks($alpsFile, $andTags, $orTags);
+        $this->scanDescriptors($alpsFile);
+    }
+
+    /**
+     * @param list<string> $andTags
+     * @param list<string> $orTags
+     */
+    private function scanLinks(AbstractProfile $alpsFile, array $andTags, array $orTags): void
+    {
         $links = new Links();
         $transDescriptors = new Descriptors();
         foreach ($alpsFile->links as $link) {
-            if ($this->isFilteredAnd($link->transDescriptor, $andTags)) {
-                $links->add($link);
-                $transDescriptors->add($link->transDescriptor);
-                continue;
-            }
-
-            if ($this->isFilteredOr($link->transDescriptor, $orTags)) {
+            if (
+                $this->isFilteredAnd($link->transDescriptor, $andTags)
+                || $this->isFilteredOr($link->transDescriptor, $orTags)
+            ) {
                 $links->add($link);
                 $transDescriptors->add($link->transDescriptor);
             }
@@ -41,12 +48,15 @@ final class TaggedAlpsProfile extends AbstractProfile
 
         $this->links = $links->links;
         $this->tranceDescriptor = $transDescriptors->descriptors;
+    }
 
+    private function scanDescriptors(AbstractProfile $alpsFile): void
+    {
         $descriptors = new Descriptors();
         foreach ($this->links as $link) {
             $descriptors->add($link->transDescriptor);
             $from = $this->filteredDescriptor(
-                $link->from,
+                $alpsFile->descriptors[$link->from],
                 $alpsFile->descriptors
             );
             foreach ($from->descriptors as $descriptor) {
@@ -54,7 +64,7 @@ final class TaggedAlpsProfile extends AbstractProfile
             }
 
             $to = $this->filteredDescriptor(
-                $link->to,
+                $alpsFile->descriptors[$link->to],
                 $alpsFile->descriptors
             );
             foreach ($to->descriptors as $descriptor) {
@@ -119,32 +129,27 @@ final class TaggedAlpsProfile extends AbstractProfile
             return substr($href, 1);
         }
 
-        [, $id] = explode('#', $href);
-
-        return $id;
+        return explode('#', $href)[1];
     }
 
     /**
      * @param array<string, AbstractDescriptor> $allDescriptors
      */
-    private function filteredDescriptor(string $id, array $allDescriptors): Descriptors
+    private function filteredDescriptor(AbstractDescriptor $edge, array $allDescriptors): Descriptors
     {
         $descriptors = new Descriptors();
-        $from = $allDescriptors[$id];
         $filteredChildren = [];
 
-        foreach ($from->descriptor as $child) {
-            $descriptorId = $this->getDescriptorId($child);
-            $descriptor = $allDescriptors[$descriptorId];
+        foreach ($edge->descriptor as $child) {
+            $descriptor = $allDescriptors[$this->getDescriptorId($child)];
             if ($this->validDescriptor($descriptor)) {
                 $filteredChildren[] = $child;
                 $descriptors->add($descriptor);
-                continue;
             }
         }
 
-        $from->descriptor = $filteredChildren;
-        $descriptors->add($from);
+        $edge->descriptor = $filteredChildren;
+        $descriptors->add($edge);
 
         return $descriptors;
     }
