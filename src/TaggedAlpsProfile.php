@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Koriym\AppStateDiagram;
 
-use function array_key_exists;
+use stdClass;
+
 use function in_array;
+use function substr;
 
 final class TaggedAlpsProfile extends AbstractProfile
 {
@@ -26,11 +28,9 @@ final class TaggedAlpsProfile extends AbstractProfile
             }
         }
 
-        $this->descriptors = $descriptors->descriptors;
-
         $links = new Links();
         foreach ($alpsFile->links as $link) {
-            if (! $this->hasFromTo($link)) {
+            if (! ($descriptors->has($link->from) && $descriptors->has($link->to))) {
                 continue;
             }
 
@@ -44,6 +44,38 @@ final class TaggedAlpsProfile extends AbstractProfile
         }
 
         $this->links = $links->links;
+
+        $filteredDescriptors = $descriptors->descriptors;
+
+        $d = new Descriptors();
+
+        foreach ($filteredDescriptors as $descriptor) {
+            $children = $descriptor->descriptor;
+            foreach ($children as $key => $child) {
+                $descriptorId = $this->getDescriptorId($child);
+
+                if (isset($filteredDescriptors[$descriptorId])) {
+                    continue;
+                }
+
+                $target = $alpsFile->descriptors[$descriptorId];
+                if ($target instanceof SemanticDescriptor) {
+                    $d->add($target);
+                    continue;
+                }
+
+                if ($target instanceof TransDescriptor) {
+                    unset($descriptor->descriptor[$key]);
+                    continue;
+                }
+            }
+        }
+
+        foreach ($d->descriptors as $descriptor) {
+            $descriptors->add($descriptor);
+        }
+
+        $this->descriptors = $descriptors->descriptors;
     }
 
     /**
@@ -74,8 +106,8 @@ final class TaggedAlpsProfile extends AbstractProfile
         return false;
     }
 
-    private function hasFromTo(Link $link): bool
+    private function getDescriptorId(stdClass $child): string
     {
-        return array_key_exists($link->from, $this->descriptors) && array_key_exists($link->to, $this->descriptors);
+        return $child->id ?? substr($child->href, 1);
     }
 }

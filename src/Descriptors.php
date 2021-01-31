@@ -23,4 +23,9 @@ class Descriptors
         /** @psalm-suppress InaccessibleProperty */
         $this->descriptors[$descriptor->id] = $descriptor;
     }
+
+    public function has(string $id): bool
+    {
+        return array_key_exists($id, $this->descriptors);
+    }
 }
