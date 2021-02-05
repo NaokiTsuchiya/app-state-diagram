@@ -18,11 +18,11 @@ class TagTest extends TestCase
 
     public function testFilteredByAndTag(): void
     {
-        $profile = (new TaggedAlpsProfile(
+        $profile = new TaggedAlpsProfile(
             $this->profile,
             [],
             ['a', 'b']
-        ));
+        );
         $this->assertArrayHasKey('s1->s2:t1', $profile->links);
         $this->assertArrayHasKey('s1->s5:t5', $profile->links);
         $this->assertArrayHasKey('s2->s3:t2', $profile->links);
@@ -48,11 +48,11 @@ class TagTest extends TestCase
 
     public function testFilteredByOrTag(): void
     {
-        $profile = (new TaggedAlpsProfile(
+        $profile = new TaggedAlpsProfile(
             $this->profile,
             ['a'],
             []
-        ));
+        );
         $this->assertArrayHasKey('s1->s2:t1', $profile->links);
         $this->assertArrayHasKey('s1->s5:t5', $profile->links);
         $this->assertArrayHasKey('s2->s3:t2', $profile->links);
@@ -74,5 +74,13 @@ class TagTest extends TestCase
         $this->assertArrayHasKey('id', $profile->descriptors);
         $this->assertCount(3, $profile->descriptors['s1']->descriptor);
         $this->assertCount(1, $profile->descriptors['s2']->descriptor);
+    }
+
+    public function testTagIsEmpty(): void
+    {
+        $profile = new TaggedAlpsProfile($this->profile, [], []);
+
+        $this->assertCount(0, $profile->links);
+        $this->assertCount(0, $profile->descriptors);
     }
 }
