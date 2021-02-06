@@ -45,7 +45,7 @@ digraph application_state_diagram {
     label="%s";
     URL="index.html" target="_parent"
   ];
-  node [shape = box, style = "bold,filled"];
+  node [shape = box, style = "bold,filled" fillcolor="lightgray"];
 
 %s
 %s
